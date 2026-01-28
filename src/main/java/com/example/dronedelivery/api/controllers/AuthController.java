@@ -1,11 +1,14 @@
-package com.example.dronedelivery.api;
+package com.example.dronedelivery.api.controllers;
 
 import com.example.dronedelivery.api.dto.AuthDtos;
 import com.example.dronedelivery.security.AuthRole;
 import com.example.dronedelivery.security.JwtService;
 import com.example.dronedelivery.service.IdentityService;
 import jakarta.validation.Valid;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.UUID;
 

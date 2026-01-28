@@ -1,4 +1,4 @@
-package com.example.dronedelivery.api;
+package com.example.dronedelivery.api.controllers;
 
 import com.example.dronedelivery.api.dto.DroneDtos;
 import com.example.dronedelivery.api.dto.OrderDtos;

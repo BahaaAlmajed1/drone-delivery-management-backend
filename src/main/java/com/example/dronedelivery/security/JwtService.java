@@ -9,6 +9,7 @@ import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -27,10 +28,11 @@ public class JwtService {
         Instant now = Instant.now();
         Instant exp = now.plus(props.getTtl());
 
-        Map<String, Object> claims = Map.of(
-                "role", role.name(),
-                "actorId", actorId == null ? null : actorId.toString()
-        );
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("role", role.name());
+        if (actorId != null) {
+            claims.put("actorId", actorId.toString());
+        }
 
         return Jwts.builder()
                 .subject(name)

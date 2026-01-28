@@ -3,7 +3,6 @@ package com.example.dronedelivery.api.dto;
 import com.example.dronedelivery.api.dto.common.Coordinates;
 import com.example.dronedelivery.domain.OrderStatus;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -11,8 +10,8 @@ import java.util.UUID;
 public class OrderDtos {
 
     public record SubmitOrderRequest(
-            @NotNull @Valid Coordinates origin,
-            @NotNull @Valid Coordinates destination
+            Coordinates origin,
+            Coordinates destination
     ) {}
 
     public record OrderResponse(

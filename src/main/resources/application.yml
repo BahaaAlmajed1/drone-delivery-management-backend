@@ -24,7 +24,7 @@ spring:
 
 app:
   jwt:
-    secret: ${APP_JWT_SECRET:dev-secret-change-me-dev-secret-change-me}
+    secret: ${APP_JWT_SECRET:hipenny,mynameisbahaaalmajed,ihopeyoulikethisproject}
     ttl: ${APP_JWT_TTL:PT8H}
 
 management:

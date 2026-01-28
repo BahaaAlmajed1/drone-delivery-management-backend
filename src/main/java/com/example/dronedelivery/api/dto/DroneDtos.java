@@ -5,8 +5,6 @@ import com.example.dronedelivery.domain.DroneStatus;
 import com.example.dronedelivery.domain.JobStatus;
 import com.example.dronedelivery.domain.JobType;
 import com.example.dronedelivery.domain.OrderStatus;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -23,7 +21,7 @@ public class DroneDtos {
     ) {}
 
     public record HeartbeatRequest(
-            @NotNull @Valid Coordinates location
+            Coordinates location
     ) {}
 
     public record HeartbeatResponse(

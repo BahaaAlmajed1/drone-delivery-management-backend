@@ -1,4 +1,4 @@
-package com.example.dronedelivery.api;
+package com.example.dronedelivery.api.controllers;
 
 import com.example.dronedelivery.service.ApiException;
 import jakarta.validation.ConstraintViolationException;
@@ -46,14 +46,14 @@ public class RestExceptionHandler {
                 "message", e.getMessage()
         ));
     }
-//
-//    @ExceptionHandler(Exception.class)
-//    public ResponseEntity<?> handleOther(Exception e) {
-//        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
-//                "timestamp", Instant.now().toString(),
-//                "status", 500,
-//                "error", "Internal Server Error",
-//                "message", e.getMessage()
-//        ));
-//    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<?> handleOther(Exception e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                "timestamp", Instant.now().toString(),
+                "status", 500,
+                "error", "Internal Server Error",
+                "message", e.getMessage()
+        ));
+    }
 }
