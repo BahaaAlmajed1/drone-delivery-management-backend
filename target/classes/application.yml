@@ -2,13 +2,13 @@ server:
   port: 8080
 
 # Default profile: run fully in-memory so reviewers can start the API with
-# `gradle bootRun` and **no external DB**.
+# `mvn spring-boot:run` and **no external DB**.
 spring:
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:h2:mem:drone_delivery;DB_CLOSE_DELAY=-1}
+    url: ${SPRING_DATASOURCE_URL:jdbc:h2:mem:drone_delivery;MODE=PostgreSQL;DB_CLOSE_DELAY=-1}
     driver-class-name: ${SPRING_DATASOURCE_DRIVER:org.h2.Driver}
-    username: ${SPRING_DATASOURCE_USERNAME:test}
-    password: ${SPRING_DATASOURCE_PASSWORD:test}
+    username: ${SPRING_DATASOURCE_USERNAME:sa}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
   jpa:
     hibernate:
       ddl-auto: ${SPRING_JPA_DDL_AUTO:create-drop}
@@ -17,6 +17,9 @@ spring:
         jdbc:
           time_zone: UTC
     open-in-view: false
+  flyway:
+    enabled: false
+
   h2:
     console:
       enabled: true

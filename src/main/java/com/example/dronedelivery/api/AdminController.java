@@ -4,9 +4,9 @@ import com.example.dronedelivery.api.dto.DroneDtos;
 import com.example.dronedelivery.api.dto.OrderDtos;
 import com.example.dronedelivery.domain.DroneStatus;
 import com.example.dronedelivery.repo.OrderRepository;
+import com.example.dronedelivery.service.AdminService;
 import com.example.dronedelivery.service.ApiException;
-import com.example.dronedelivery.service.DeliveryService;
-import com.example.dronedelivery.service.Mapper;
+import com.example.dronedelivery.service.ResponseMapper;
 import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -19,19 +19,19 @@ import java.util.UUID;
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminController {
 
-    private final DeliveryService deliveryService;
+    private final AdminService adminService;
     private final OrderRepository orderRepository;
 
-    public AdminController(DeliveryService deliveryService, OrderRepository orderRepository) {
-        this.deliveryService = deliveryService;
+    public AdminController(AdminService adminService, OrderRepository orderRepository) {
+        this.adminService = adminService;
         this.orderRepository = orderRepository;
     }
 
     @GetMapping("/orders")
     public List<OrderDtos.OrderResponse> listAllOrders() {
-        return deliveryService.listAllOrders()
+        return adminService.listAllOrders()
                 .stream()
-                .map(o -> Mapper.toDto(o, deliveryService.computeProgress(o)))
+                .map(o -> ResponseMapper.toDto(o, adminService.computeProgress(o)))
                 .toList();
     }
 
@@ -44,24 +44,24 @@ public class AdminController {
         }
         return orderRepository.findAllById(req.orderIds())
                 .stream()
-                .map(o -> Mapper.toDto(o, deliveryService.computeProgress(o)))
+                .map(o -> ResponseMapper.toDto(o, adminService.computeProgress(o)))
                 .toList();
     }
 
     @PatchMapping("/orders/{orderId}")
     public OrderDtos.OrderResponse updateOrder(@PathVariable UUID orderId, @Valid @RequestBody OrderDtos.AdminUpdateOrderRequest req) {
-        Double oLat = req.origin() == null ? null : req.origin().lat();
-        Double oLng = req.origin() == null ? null : req.origin().lng();
-        Double dLat = req.destination() == null ? null : req.destination().lat();
-        Double dLng = req.destination() == null ? null : req.destination().lng();
+        Double oLat = req.origin().lat();
+        Double oLng = req.origin().lng();
+        Double dLat = req.destination().lat();
+        Double dLng = req.destination().lng();
 
-        var order = deliveryService.adminUpdateOrder(orderId, oLat, oLng, dLat, dLng);
-        return Mapper.toDto(order, deliveryService.computeProgress(order));
+        var order = adminService.adminUpdateOrder(orderId, oLat, oLng, dLat, dLng);
+        return ResponseMapper.toDto(order, adminService.computeProgress(order));
     }
 
     @GetMapping("/drones")
     public List<DroneDtos.DroneResponse> listDrones() {
-        return deliveryService.listDrones().stream().map(Mapper::toDto).toList();
+        return adminService.listDrones().stream().map(ResponseMapper::toDto).toList();
     }
 
     public record SetDroneStatusRequest(DroneStatus status) {}
@@ -69,6 +69,6 @@ public class AdminController {
     @PostMapping("/drones/{droneId}/status")
     public DroneDtos.DroneResponse setDroneStatus(@PathVariable UUID droneId, @RequestBody SetDroneStatusRequest req) {
         if (req == null || req.status() == null) throw ApiException.badRequest("status is required.");
-        return Mapper.toDto(deliveryService.adminSetDroneStatus(droneId, req.status()));
+        return ResponseMapper.toDto(adminService.adminSetDroneStatus(droneId, req.status()));
     }
 }

@@ -2,8 +2,8 @@ package com.example.dronedelivery.api;
 
 import com.example.dronedelivery.api.dto.OrderDtos;
 import com.example.dronedelivery.security.AuthContext;
-import com.example.dronedelivery.service.DeliveryService;
-import com.example.dronedelivery.service.Mapper;
+import com.example.dronedelivery.service.EndUserService;
+import com.example.dronedelivery.service.ResponseMapper;
 import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -16,43 +16,43 @@ import java.util.UUID;
 @PreAuthorize("hasRole('ENDUSER')")
 public class EndUserOrdersController {
 
-    private final DeliveryService deliveryService;
+    private final EndUserService endUserService;
 
-    public EndUserOrdersController(DeliveryService deliveryService) {
-        this.deliveryService = deliveryService;
+    public EndUserOrdersController(EndUserService endUserService) {
+        this.endUserService = endUserService;
     }
 
     @PostMapping
     public OrderDtos.OrderResponse submit(@Valid @RequestBody OrderDtos.SubmitOrderRequest req) {
         UUID endUserId = AuthContext.actorIdOrNull();
-        var order = deliveryService.submitOrder(
+        var order = endUserService.submitOrder(
                 endUserId,
                 req.origin().lat(), req.origin().lng(),
                 req.destination().lat(), req.destination().lng()
         );
-        return Mapper.toDto(order, deliveryService.computeProgress(order));
+        return ResponseMapper.toDto(order, endUserService.computeProgress(order));
     }
 
     @PostMapping("/{orderId}/withdraw")
     public OrderDtos.OrderResponse withdraw(@PathVariable UUID orderId) {
         UUID endUserId = AuthContext.actorIdOrNull();
-        var order = deliveryService.withdrawOrder(endUserId, orderId);
-        return Mapper.toDto(order, deliveryService.computeProgress(order));
+        var order = endUserService.withdrawOrder(endUserId, orderId);
+        return ResponseMapper.toDto(order, endUserService.computeProgress(order));
     }
 
     @GetMapping
     public List<OrderDtos.OrderResponse> listMine() {
         UUID endUserId = AuthContext.actorIdOrNull();
-        return deliveryService.listOrdersForEndUser(endUserId)
+        return endUserService.listOrdersForEndUser(endUserId)
                 .stream()
-                .map(o -> Mapper.toDto(o, deliveryService.computeProgress(o)))
+                .map(o -> ResponseMapper.toDto(o, endUserService.computeProgress(o)))
                 .toList();
     }
 
     @GetMapping("/{orderId}")
     public OrderDtos.OrderResponse getMine(@PathVariable UUID orderId) {
         UUID endUserId = AuthContext.actorIdOrNull();
-        var order = deliveryService.getOrderForEndUser(endUserId, orderId);
-        return Mapper.toDto(order, deliveryService.computeProgress(order));
+        var order = endUserService.getOrderForEndUser(endUserId, orderId);
+        return ResponseMapper.toDto(order, endUserService.computeProgress(order));
     }
 }

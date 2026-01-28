@@ -1,5 +1,6 @@
 package com.example.dronedelivery.api.dto;
 
+import com.example.dronedelivery.api.dto.common.Coordinates;
 import com.example.dronedelivery.domain.OrderStatus;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -10,15 +11,15 @@ import java.util.UUID;
 public class OrderDtos {
 
     public record SubmitOrderRequest(
-            @NotNull @Valid CommonDtos.LatLng origin,
-            @NotNull @Valid CommonDtos.LatLng destination
+            @NotNull @Valid Coordinates origin,
+            @NotNull @Valid Coordinates destination
     ) {}
 
     public record OrderResponse(
             UUID id,
             UUID createdByEndUserId,
-            CommonDtos.LatLng origin,
-            CommonDtos.LatLng destination,
+            Coordinates origin,
+            Coordinates destination,
             OrderStatus status,
             UUID currentJobId,
             Instant createdAt,
@@ -26,12 +27,12 @@ public class OrderDtos {
     ) {}
 
     public record Progress(
-            CommonDtos.LatLng currentLocation,
+            Coordinates currentLocation,
             Integer etaSecondsApprox
     ) {}
 
     public record AdminUpdateOrderRequest(
-            @Valid CommonDtos.LatLng origin,
-            @Valid CommonDtos.LatLng destination
+            @Valid Coordinates origin,
+            @Valid Coordinates destination
     ) {}
 }

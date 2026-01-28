@@ -1,5 +1,6 @@
 package com.example.dronedelivery.api.dto;
 
+import com.example.dronedelivery.api.dto.common.Coordinates;
 import com.example.dronedelivery.domain.DroneStatus;
 import com.example.dronedelivery.domain.JobStatus;
 import com.example.dronedelivery.domain.JobType;
@@ -16,13 +17,13 @@ public class DroneDtos {
             UUID id,
             String name,
             DroneStatus status,
-            CommonDtos.LatLng lastLocation,
+            Coordinates lastLocation,
             Instant lastHeartbeatAt,
             UUID currentJobId
     ) {}
 
     public record HeartbeatRequest(
-            @NotNull @Valid CommonDtos.LatLng location
+            @NotNull @Valid Coordinates location
     ) {}
 
     public record HeartbeatResponse(
@@ -35,8 +36,8 @@ public class DroneDtos {
             UUID jobId,
             JobStatus jobStatus,
             JobType jobType,
-            CommonDtos.LatLng pickup,
-            CommonDtos.LatLng dropoff,
+            Coordinates pickup,
+            Coordinates dropoff,
             UUID orderId,
             OrderStatus orderStatus
     ) {}

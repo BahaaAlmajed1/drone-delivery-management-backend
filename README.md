@@ -4,7 +4,6 @@ This project implements the assessment requirements as a **Spring Boot modular m
 - REST API
 - Self-signed **HMAC JWT** auth issued by an allowlisted endpoint (`/auth/token`)
 - **In-memory database by default (H2)** so it runs with zero external dependencies
-- Optional Postgres persistence (Flyway migrations) via a profile
 - Swagger / OpenAPI docs
 - Dockerfile + docker-compose
 - A small test suite
@@ -12,7 +11,7 @@ This project implements the assessment requirements as a **Spring Boot modular m
 ## Quick start (zero dependencies)
 
 ```bash
-mvn spring-boot:run
+gradle bootRun
 ```
 
 API: `http://localhost:8080`
@@ -22,7 +21,7 @@ Optional (debug): H2 console at `http://localhost:8080/h2`
 
 ---
 
-## Optional: run with Postgres (Docker)
+## Run with Docker
 
 ```bash
 docker compose up --build
@@ -222,25 +221,15 @@ curl -s http://localhost:8080/admin/drones/$DRONE_ID/status \
 
 By default, the app runs against an **in-memory H2** DB with `create-drop` schema generation.
 
-If you prefer Postgres locally:
-1. Start Postgres
-2. Set `SPRING_PROFILES_ACTIVE=postgres`
-3. Provide env vars if you are not using the defaults:
-   - `SPRING_DATASOURCE_URL`
-   - `SPRING_DATASOURCE_USERNAME`
-   - `SPRING_DATASOURCE_PASSWORD`
-   - `APP_JWT_SECRET`
-4. Run:
-```bash
-SPRING_PROFILES_ACTIVE=postgres mvn spring-boot:run
-```
+If you want to point to another JDBC database later, override `SPRING_DATASOURCE_URL` (and credentials) while keeping
+the same Spring Boot configuration.
 
 ---
 
 ## Run tests
 
 ```bash
-mvn test
+gradle test
 ```
 
-Tests run against an in-memory H2 database (schema `create-drop`, Flyway disabled).
+Tests run against an in-memory H2 database (schema `create-drop`).

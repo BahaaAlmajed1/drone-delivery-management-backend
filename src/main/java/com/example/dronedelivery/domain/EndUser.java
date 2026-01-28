@@ -1,27 +1,26 @@
 package com.example.dronedelivery.domain;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import lombok.AccessLevel;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.util.UUID;
 
 @Entity
-@Table(name = "end_users", uniqueConstraints = {
-        @UniqueConstraint(name = "uk_end_users_name", columnNames = {"name"})
-})
+@Data
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class EndUser {
 
     @Id
     @GeneratedValue
     private UUID id;
 
-    @Column(nullable = false)
     private String name;
-
-    protected EndUser() {}
 
     public EndUser(String name) {
         this.name = name;
     }
-
-    public UUID getId() { return id; }
-    public String getName() { return name; }
 }

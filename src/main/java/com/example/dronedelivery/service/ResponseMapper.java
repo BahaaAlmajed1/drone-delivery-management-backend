@@ -1,22 +1,25 @@
 package com.example.dronedelivery.service;
 
-import com.example.dronedelivery.api.dto.CommonDtos;
 import com.example.dronedelivery.api.dto.DroneDtos;
 import com.example.dronedelivery.api.dto.JobDtos;
 import com.example.dronedelivery.api.dto.OrderDtos;
-import com.example.dronedelivery.domain.*;
+import com.example.dronedelivery.api.dto.common.Coordinates;
+import com.example.dronedelivery.domain.DeliveryOrder;
+import com.example.dronedelivery.domain.Drone;
+import com.example.dronedelivery.domain.Job;
 
-public final class Mapper {
+public final class ResponseMapper {
 
-    private Mapper() {}
-
-    public static CommonDtos.LatLng latLng(double lat, double lng) {
-        return new CommonDtos.LatLng(lat, lng);
+    private ResponseMapper() {
     }
 
-    public static CommonDtos.LatLng latLng(Double lat, Double lng) {
+    public static Coordinates coordinates(double lat, double lng) {
+        return new Coordinates(lat, lng);
+    }
+
+    public static Coordinates coordinates(Double lat, Double lng) {
         if (lat == null || lng == null) return null;
-        return new CommonDtos.LatLng(lat, lng);
+        return new Coordinates(lat, lng);
     }
 
     public static DroneDtos.DroneResponse toDto(Drone d) {
@@ -24,7 +27,7 @@ public final class Mapper {
                 d.getId(),
                 d.getName(),
                 d.getStatus(),
-                latLng(d.getLastLat(), d.getLastLng()),
+                coordinates(d.getLastLat(), d.getLastLng()),
                 d.getLastHeartbeatAt(),
                 d.getCurrentJobId()
         );
@@ -36,8 +39,8 @@ public final class Mapper {
                 j.getOrderId(),
                 j.getType(),
                 j.getStatus(),
-                latLng(j.getPickupLat(), j.getPickupLng()),
-                latLng(j.getDropoffLat(), j.getDropoffLng()),
+                coordinates(j.getPickupLat(), j.getPickupLng()),
+                coordinates(j.getDropoffLat(), j.getDropoffLng()),
                 j.getAssignedDroneId(),
                 j.getExcludedDroneId(),
                 j.getReservedAt(),
@@ -52,8 +55,8 @@ public final class Mapper {
         return new OrderDtos.OrderResponse(
                 o.getId(),
                 o.getCreatedByEndUserId(),
-                latLng(o.getOriginLat(), o.getOriginLng()),
-                latLng(o.getDestinationLat(), o.getDestinationLng()),
+                coordinates(o.getOriginLat(), o.getOriginLng()),
+                coordinates(o.getDestinationLat(), o.getDestinationLng()),
                 o.getStatus(),
                 o.getCurrentJobId(),
                 o.getCreatedAt(),

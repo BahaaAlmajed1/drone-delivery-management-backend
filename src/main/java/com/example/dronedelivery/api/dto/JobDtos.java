@@ -1,5 +1,6 @@
 package com.example.dronedelivery.api.dto;
 
+import com.example.dronedelivery.api.dto.common.Coordinates;
 import com.example.dronedelivery.domain.JobStatus;
 import com.example.dronedelivery.domain.JobType;
 
@@ -13,8 +14,8 @@ public class JobDtos {
             UUID orderId,
             JobType type,
             JobStatus status,
-            CommonDtos.LatLng pickup,
-            CommonDtos.LatLng dropoff,
+            Coordinates pickup,
+            Coordinates dropoff,
             UUID assignedDroneId,
             UUID excludedDroneId,
             Instant reservedAt,

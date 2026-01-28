@@ -8,13 +8,12 @@ import com.example.dronedelivery.repo.JobRepository;
 import com.example.dronedelivery.repo.OrderRepository;
 import com.example.dronedelivery.security.AuthContext;
 import com.example.dronedelivery.service.ApiException;
-import com.example.dronedelivery.service.DeliveryService;
-import com.example.dronedelivery.service.Mapper;
+import com.example.dronedelivery.service.DroneService;
+import com.example.dronedelivery.service.ResponseMapper;
 import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -23,12 +22,12 @@ import java.util.UUID;
 @PreAuthorize("hasRole('DRONE')")
 public class DroneController {
 
-    private final DeliveryService deliveryService;
+    private final DroneService droneService;
     private final JobRepository jobRepository;
     private final OrderRepository orderRepository;
 
-    public DroneController(DeliveryService deliveryService, JobRepository jobRepository, OrderRepository orderRepository) {
-        this.deliveryService = deliveryService;
+    public DroneController(DroneService droneService, JobRepository jobRepository, OrderRepository orderRepository) {
+        this.droneService = droneService;
         this.jobRepository = jobRepository;
         this.orderRepository = orderRepository;
     }
@@ -42,9 +41,9 @@ public class DroneController {
     @PostMapping("/self/heartbeat")
     public DroneDtos.HeartbeatResponse heartbeat(@Valid @RequestBody DroneDtos.HeartbeatRequest req) {
         UUID droneId = droneId();
-        var d = deliveryService.heartbeat(droneId, req.location().lat(), req.location().lng());
+        var d = droneService.heartbeat(droneId, req.location().lat(), req.location().lng());
 
-        Job job = deliveryService.getCurrentJobForDrone(droneId);
+        Job job = droneService.getCurrentJobForDrone(droneId);
         DroneDtos.Assignment assignment = null;
 
         if (job != null) {
@@ -53,8 +52,8 @@ public class DroneController {
                     job.getId(),
                     job.getStatus(),
                     job.getType(),
-                    Mapper.latLng(job.getPickupLat(), job.getPickupLng()),
-                    Mapper.latLng(job.getDropoffLat(), job.getDropoffLng()),
+                    ResponseMapper.coordinates(job.getPickupLat(), job.getPickupLng()),
+                    ResponseMapper.coordinates(job.getDropoffLat(), job.getDropoffLng()),
                     job.getOrderId(),
                     order == null ? null : order.getStatus()
             );
@@ -64,58 +63,58 @@ public class DroneController {
                 (job.getStatus() == JobStatus.RESERVED ? "PICKUP" :
                         (job.getStatus() == JobStatus.IN_PROGRESS ? "DELIVER_OR_FAIL" : "WAIT"));
 
-        return new DroneDtos.HeartbeatResponse(Mapper.toDto(d), assignment, nextAction);
+        return new DroneDtos.HeartbeatResponse(ResponseMapper.toDto(d), assignment, nextAction);
     }
 
     @GetMapping("/jobs/open")
     public List<JobDtos.JobResponse> listOpenJobs() {
         return jobRepository.findByStatusOrderByCreatedAtAsc(JobStatus.OPEN)
                 .stream()
-                .map(Mapper::toDto)
+                .map(ResponseMapper::toDto)
                 .toList();
     }
 
     @PostMapping("/jobs/{jobId}/reserve")
     public DroneDtos.ReserveJobResponse reserve(@PathVariable UUID jobId) {
         UUID droneId = droneId();
-        Job job = deliveryService.reserveJob(droneId, jobId);
+        Job job = droneService.reserveJob(droneId, jobId);
         return new DroneDtos.ReserveJobResponse(job.getId(), job.getStatus(), job.getReservedAt());
     }
 
     @PostMapping("/jobs/{jobId}/pickup")
     public JobDtos.JobResponse pickup(@PathVariable UUID jobId) {
         UUID droneId = droneId();
-        return Mapper.toDto(deliveryService.pickupJob(droneId, jobId));
+        return ResponseMapper.toDto(droneService.pickupJob(droneId, jobId));
     }
 
     @PostMapping("/jobs/{jobId}/complete")
     public JobDtos.JobResponse complete(@PathVariable UUID jobId) {
         UUID droneId = droneId();
-        return Mapper.toDto(deliveryService.completeJob(droneId, jobId));
+        return ResponseMapper.toDto(droneService.completeJob(droneId, jobId));
     }
 
     @PostMapping("/jobs/{jobId}/fail")
     public JobDtos.JobResponse fail(@PathVariable UUID jobId) {
         UUID droneId = droneId();
-        return Mapper.toDto(deliveryService.failJob(droneId, jobId));
+        return ResponseMapper.toDto(droneService.failJob(droneId, jobId));
     }
 
     @PostMapping("/self/broken")
     public DroneDtos.DroneResponse markBroken() {
         UUID droneId = droneId();
-        return Mapper.toDto(deliveryService.droneMarkBroken(droneId));
+        return ResponseMapper.toDto(droneService.droneMarkBroken(droneId));
     }
 
     @PostMapping("/self/fixed")
     public DroneDtos.DroneResponse markFixed() {
         UUID droneId = droneId();
-        return Mapper.toDto(deliveryService.droneMarkFixed(droneId));
+        return ResponseMapper.toDto(droneService.droneMarkFixed(droneId));
     }
 
     @GetMapping("/self/job")
     public DroneDtos.Assignment currentAssignment() {
         UUID droneId = droneId();
-        Job job = deliveryService.getCurrentJobForDrone(droneId);
+        Job job = droneService.getCurrentJobForDrone(droneId);
         if (job == null) return null;
 
         var order = orderRepository.findById(job.getOrderId()).orElse(null);
@@ -123,8 +122,8 @@ public class DroneController {
                 job.getId(),
                 job.getStatus(),
                 job.getType(),
-                Mapper.latLng(job.getPickupLat(), job.getPickupLng()),
-                Mapper.latLng(job.getDropoffLat(), job.getDropoffLng()),
+                ResponseMapper.coordinates(job.getPickupLat(), job.getPickupLng()),
+                ResponseMapper.coordinates(job.getDropoffLat(), job.getDropoffLng()),
                 job.getOrderId(),
                 order == null ? null : order.getStatus()
         );

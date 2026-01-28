@@ -1,5 +1,7 @@
 .git
 target
+.gradle
+build
 .idea
 *.iml
 .DS_Store
