@@ -28,7 +28,6 @@ public class AuthController {
     public AuthDtos.TokenResponse token(@Valid @RequestBody AuthDtos.TokenRequest req) {
         UUID actorId = null;
 
-        // The assessment says this endpoint is allowlisted; we keep it simple, self-signed JWT.
         if (req.userType() == AuthRole.DRONE) {
             actorId = identityService.getOrCreateDrone(req.name()).getId();
         } else if (req.userType() == AuthRole.ENDUSER) {
