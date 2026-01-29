@@ -1,0 +1,43 @@
+server:
+  port: 8080
+
+# Default profile: run fully in-memory so reviewers can start the API with
+# `gradle bootRun` and **no external DB**.
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:h2:mem:drone_delivery;DB_CLOSE_DELAY=-1}
+    driver-class-name: ${SPRING_DATASOURCE_DRIVER:org.h2.Driver}
+    username: ${SPRING_DATASOURCE_USERNAME:test}
+    password: ${SPRING_DATASOURCE_PASSWORD:test}
+  jpa:
+    hibernate:
+      ddl-auto: ${SPRING_JPA_DDL_AUTO:create-drop}
+    defer-datasource-initialization: true
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+    open-in-view: false
+  sql:
+    init:
+      mode: always
+      # Load data into the in-memory H2 database.
+      data-locations: classpath:V2__data.sql
+  h2:
+    console:
+      enabled: true
+      path: /h2
+
+app:
+  jwt:
+    secret: ${APP_JWT_SECRET:hipenny,mynameisbahaaalmajed,ihopeyoulikethisproject}
+    ttl: ${APP_JWT_TTL:PT8H}
+  scheduler:
+    assignment-interval-seconds: ${APP_SCHEDULER_ASSIGNMENT_INTERVAL_SECONDS:10}
+    heartbeat-timeout-minutes: ${APP_SCHEDULER_HEARTBEAT_TIMEOUT_MINUTES:5}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
