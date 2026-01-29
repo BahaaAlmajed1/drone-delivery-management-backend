@@ -118,6 +118,23 @@ curl -s http://localhost:8080/drone/jobs/$JOB_ID/reserve \
 
 Reservation is concurrency-safe via **optimistic locking** on the `jobs` table. If two drones race, one gets `409 Conflict`.
 
+### Automatic scheduler: assign closest drones
+
+The app also runs a background scheduler that periodically assigns **OPEN** jobs to the closest available drone
+based on the job’s pickup origin and the drone’s last heartbeat location (skipping broken drones or ones already
+on a job). The interval is configurable in `application.yml`:
+
+```yaml
+app:
+  scheduler:
+    assignment-interval-seconds: 10
+    heartbeat-timeout-minutes: 5
+```
+
+The heartbeat timeout also drives an availability check: drones that have not sent a heartbeat within the
+configured number of minutes are automatically marked as `BROKEN` (including the same handoff logic if
+they were mid-delivery).
+
 ### Drone: pickup and complete (or fail)
 
 Pickup:
@@ -287,12 +304,6 @@ chmod +x gradlew
 
 ## Future plans / TODOs
 
-### Near-term improvements
-
-- Add contract tests for error handling (403/409/400) across all endpoints.
-- Add metrics for job reservation races and handoff frequency.
-- Expand seed data to include bulk admin scenarios and multiple handoff chains.
-
 ### Scaling plan: move to microservices + async architecture
 
 As usage grows (large fleets and high order volume), the monolith can be split into services and
@@ -308,12 +319,12 @@ made asynchronous to reduce coupling and improve throughput:
 
 **New technologies to introduce**
 
-- **gRPC** for internal service-to-service communication (lower latency, typed contracts).
-- **Kafka** (or **NATS**) for event streaming: `JobReserved`, `JobStarted`, `JobCompleted`, `DroneBroken`, etc.
+- **gRPC** for internal service-to-service communication
+- **Kafka** for event streaming: `JobReserved`, `JobStarted`, `JobCompleted`, `DroneBroken`, etc.
 - **Outbox pattern** for reliable event publishing.
 - **Redis** for caching hot reads (open jobs, live drone locations).
 - **PostgreSQL** (or CockroachDB) for horizontal scale and stronger consistency guarantees.
-- **Observability stack**: OpenTelemetry + Prometheus/Grafana for tracing and metrics.
+- **Observability stack**: Prometheus/Grafana for tracing and metrics.
 
 **Async flow examples**
 

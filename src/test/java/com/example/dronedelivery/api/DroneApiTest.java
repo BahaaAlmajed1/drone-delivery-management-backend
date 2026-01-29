@@ -5,8 +5,10 @@ import com.example.dronedelivery.api.dto.OrderDtos;
 import com.example.dronedelivery.domain.JobStatus;
 import com.example.dronedelivery.domain.JobType;
 import com.example.dronedelivery.security.AuthRole;
+import com.example.dronedelivery.service.JobAssignmentScheduler;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.boot.web.client.RestTemplateBuilder;
@@ -23,6 +25,9 @@ class DroneApiTest extends ApiTestSupport {
 
     @LocalServerPort
     int port;
+
+    @Autowired
+    JobAssignmentScheduler scheduler;
 
     @Test
     void droneCanReservePickupAndCompleteJob() {
@@ -158,5 +163,39 @@ class DroneApiTest extends ApiTestSupport {
         executor.shutdownNow();
 
         Assertions.assertThat(successA).isNotEqualTo(successB);
+    }
+
+    @Test
+    void schedulerAssignsClosestDrone() {
+        String endUserToken = tokenFor("scheduler-user", AuthRole.ENDUSER);
+        OrderDtos.OrderResponse order = submitOrder(endUserToken, 41.0, 42.0, 43.0, 44.0);
+
+        String droneNearToken = tokenFor("scheduler-drone-near", AuthRole.DRONE);
+        String droneFarToken = tokenFor("scheduler-drone-far", AuthRole.DRONE);
+
+        heartbeat(droneNearToken, 41.01, 42.01);
+        heartbeat(droneFarToken, 60.0, 60.0);
+
+        scheduler.assignJobsToClosestDrones();
+
+        ResponseEntity<DroneDtos.Assignment> nearAssignment = restTemplate.exchange(
+                "/drone/self/job",
+                HttpMethod.GET,
+                new HttpEntity<>(null, authHeaders(droneNearToken)),
+                DroneDtos.Assignment.class
+        );
+        Assertions.assertThat(nearAssignment.getStatusCode()).isEqualTo(HttpStatus.OK);
+        Assertions.assertThat(nearAssignment.getBody()).isNotNull();
+        Assertions.assertThat(nearAssignment.getBody().jobId()).isEqualTo(order.currentJobId());
+        Assertions.assertThat(nearAssignment.getBody().jobStatus()).isEqualTo(JobStatus.RESERVED);
+
+        ResponseEntity<DroneDtos.Assignment> farAssignment = restTemplate.exchange(
+                "/drone/self/job",
+                HttpMethod.GET,
+                new HttpEntity<>(null, authHeaders(droneFarToken)),
+                DroneDtos.Assignment.class
+        );
+        Assertions.assertThat(farAssignment.getStatusCode()).isEqualTo(HttpStatus.OK);
+        Assertions.assertThat(farAssignment.getBody()).isNull();
     }
 }
