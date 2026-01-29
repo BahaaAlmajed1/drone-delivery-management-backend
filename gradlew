@@ -117,6 +117,10 @@ esac
 
 CLASSPATH=$APP_HOME/gradle/wrapper/gradle-wrapper.jar
 
+JAVA_HOME_FILE=$APP_HOME/.java-home
+if [ -z "$JAVA_HOME" ] && [ -f "$JAVA_HOME_FILE" ] ; then
+    JAVA_HOME=$( awk 'NR==1 {gsub(/^[ \t]+|[ \t]+$/, "", $0); print; exit}' "$JAVA_HOME_FILE" )
+fi
 
 # Determine the Java command to use to start the JVM.
 if [ -n "$JAVA_HOME" ] ; then

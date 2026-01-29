@@ -1,16 +1,19 @@
 # Drone Delivery Management Backend
-
 Spring Boot modular monolith for the drone delivery assessment. It exposes REST APIs, issues HMAC-signed JWTs, and runs
 against an in-memory H2 database by default.
 
-Verify Java is available:
-```bash
-java -version
-```
+API: `http://localhost:8080`
 
-### Local Setup
+Swagger UI: `http://localhost:8080/swagger-ui/index.html`
+
+## Quick start
 
 1. Ensure Java 17 is available and correct java path is set in your environment variables (PATH, JAVA_HOME).
+
+If `JAVA_HOME` is not set in your environment, set it once in the `.java-home` file (first line only) so the Gradle
+wrapper can find Java on every platform.
+**Note**: if you ar running embedded Intellij java sdk, you can find the sdk path by going to File > Project Structure >
+SDKs and copy the path into `.java-home` file
 2. Start the app by running main method by using IDE (com.example.dronedelivery.DroneDeliveryApplication.main) or by
    running:
 
@@ -79,7 +82,7 @@ These tests run with the Spring test context and you must **not** app running:
 
 ## TODOs / Future improvements
 
-- Split into smaller services once traffic grows (auth, orders, drones, jobs).
-- Add an event stream for state changes using KAFKA (job reserved, job started, drone broken).
-- Replace H2 with Postgres/CockroachDb or any ACID Scalable DB and add read caching(Redis) for hot endpoints.
-- Introduce observability (metrics + tracing) via Prometheus/Grafana before scaling.
+- Split into smaller services once traffic grows and use **gRPC** between services (auth, orders, drones, jobs).
+- Add an event stream for state changes using **KAFKA** (job reserved, job started, drone broken).
+- Replace H2 with **Postgres/CockroachDb** or any ACID Scalable DB and add read caching **(Redis)** for hot endpoints.
+- Introduce observability (metrics + tracing) via **Prometheus/Grafana** before scaling.
