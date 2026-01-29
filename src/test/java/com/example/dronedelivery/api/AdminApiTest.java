@@ -61,8 +61,6 @@ class AdminApiTest extends ApiTestSupport {
         Assertions.assertThat(updateResponse.getBody()).isNotNull();
         Assertions.assertThat(updateResponse.getBody().origin().lat()).isEqualTo(50.0);
 
-        tokenFor("admin-list-drone", AuthRole.DRONE);
-
         ResponseEntity<DroneDtos.DroneResponse[]> dronesResponse = restTemplate.exchange(
                 "/admin/drones",
                 HttpMethod.GET,

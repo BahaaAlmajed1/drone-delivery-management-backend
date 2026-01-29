@@ -156,10 +156,7 @@ public class DroneService {
     public Job getCurrentJobForDrone(UUID droneId) {
         Drone d = droneRepository.findById(droneId)
                 .orElseThrow(() -> ApiException.notFound("Drone not found: " + droneId));
-        if (d.getCurrentJobId() == null) {
-            throw ApiException.badRequest("Drone has no current job.");
-        }
-        return jobRepository.findById(d.getCurrentJobId())
-                .orElseThrow(() -> ApiException.notFound("Current job not found: " + d.getCurrentJobId()));
+        if (d.getCurrentJobId() == null) return null;
+        return jobRepository.findById(d.getCurrentJobId()).orElse(null);
     }
 }

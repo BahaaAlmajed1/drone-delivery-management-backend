@@ -48,7 +48,7 @@ public class AdminController {
                 .toList();
     }
 
-    @PatchMapping("/orders/{orderId}")
+    @PostMapping("/orders/{orderId}")
     public OrderDtos.OrderResponse updateOrder(@PathVariable UUID orderId, @Valid @RequestBody OrderDtos.AdminUpdateOrderRequest req) {
         Double oLat = req.origin().lat();
         Double oLng = req.origin().lng();

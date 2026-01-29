@@ -38,12 +38,7 @@ class DeliveryServiceHelperTest {
     void computeProgressReturnsNullWithoutAssignedDrone() {
         EndUser endUser = endUserRepository.save(new EndUser("unit-progress-user"));
         DeliveryOrder order = endUserService.submitOrder(endUser.getId(), 1.0, 2.0, 3.0, 4.0);
-        var progress = deliveryServiceHelper.computeProgress(order);
-        assertThat(progress).isNotNull();
-        assertThat(progress.currentLocation()).isNotNull();
-        assertThat(progress.currentLocation().lat()).isEqualTo(1.0);
-        assertThat(progress.currentLocation().lng()).isEqualTo(2.0);
-        assertThat(progress.etaSecondsApprox()).isEqualTo(0);
+        assertThat(deliveryServiceHelper.computeProgress(order)).isNull();
     }
 
     @Test

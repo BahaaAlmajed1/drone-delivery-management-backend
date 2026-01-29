@@ -29,23 +29,13 @@ public class DeliveryServiceHelper {
 
     @Transactional(readOnly = true)
     public OrderDtos.Progress computeProgress(DeliveryOrder order) {
-        if (order.getCurrentJobId() == null) {
-            throw ApiException.badRequest("Order has no current job.");
-        }
-        Job job = jobRepository.findById(order.getCurrentJobId())
-                .orElseThrow(() -> ApiException.notFound("Current job not found: " + order.getCurrentJobId()));
+        if (order.getCurrentJobId() == null) return null;
+        Job job = jobRepository.findById(order.getCurrentJobId()).orElse(null);
+        if (job == null) return null;
 
-        if (job.getAssignedDroneId() == null) {
-            return new OrderDtos.Progress(
-                    ResponseMapper.coordinates(order.getOriginLat(), order.getOriginLng()),
-                    0
-            );
-        }
-        Drone d = droneRepository.findById(job.getAssignedDroneId())
-                .orElseThrow(() -> ApiException.notFound("Drone not found: " + job.getAssignedDroneId()));
-        if (d.getLastHeartbeatAt() == null) {
-            throw ApiException.badRequest("Drone has no last known location.");
-        }
+        if (job.getAssignedDroneId() == null) return null;
+        Drone d = droneRepository.findById(job.getAssignedDroneId()).orElse(null);
+        if (d == null || d.getLastLat() == null || d.getLastLng() == null) return null;
 
         double remainingMeters = GeoUtil.haversineMeters(d.getLastLat(), d.getLastLng(), job.getDropoffLat(), job.getDropoffLng());
         int etaSec = (int) Math.round(remainingMeters / AVERAGE_SPEED_M_PER_S);
@@ -92,8 +82,12 @@ public class DeliveryServiceHelper {
             return;
         }
 
-        Job currentJob = jobRepository.findById(currentJobId)
-                .orElseThrow(() -> ApiException.notFound("Current job not found: " + currentJobId));
+        Job currentJob = jobRepository.findById(currentJobId).orElse(null);
+        if (currentJob == null) {
+            d.setCurrentJobId(null);
+            droneRepository.save(d);
+            return;
+        }
 
         // Only create a handoff job if the drone currently has the goods (job in progress).
         if (currentJob.getStatus() == JobStatus.IN_PROGRESS) {
@@ -105,7 +99,7 @@ public class DeliveryServiceHelper {
             DeliveryOrder order = orderRepository.findById(currentJob.getOrderId())
                     .orElseThrow(() -> ApiException.notFound("Order not found for job: " + currentJob.getOrderId()));
 
-            if (d.getLastHeartbeatAt() == null) {
+            if (d.getLastLat() == null || d.getLastLng() == null) {
                 throw new ApiException(HttpStatus.BAD_REQUEST, "Drone has no last known location; heartbeat required before marking broken.");
             }
 

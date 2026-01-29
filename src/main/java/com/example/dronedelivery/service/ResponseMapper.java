@@ -17,9 +17,7 @@ public final class ResponseMapper {
     }
 
     public static Coordinates coordinates(Double lat, Double lng) {
-        if (lat == null || lng == null) {
-            throw ApiException.badRequest("Coordinates are required.");
-        }
+        if (lat == null || lng == null) return null;
         return new Coordinates(lat, lng);
     }
 
