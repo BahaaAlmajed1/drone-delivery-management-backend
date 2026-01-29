@@ -14,7 +14,10 @@ If `JAVA_HOME` is not set in your environment, set it once in the `.java-home` f
 wrapper can find Java on every platform.
 **Note**: if you ar running embedded Intellij java sdk, you can find the sdk path by going to File > Project Structure >
 SDKs and copy the path into `.java-home` file
-2. Start the app by running main method by using IDE (com.example.dronedelivery.DroneDeliveryApplication.main) or by
+
+2. Make sure you have an IDE Compatible with gradle projects (Intellij has it by default), then open the build.gradle
+   file and press reload gradle dependencies icon
+3. Start the app by running main method by using IDE (com.example.dronedelivery.DroneDeliveryApplication.main) or by
    running:
 
 ```bash
