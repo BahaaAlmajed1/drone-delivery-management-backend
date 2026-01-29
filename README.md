@@ -233,3 +233,90 @@ gradle test
 ```
 
 Tests run against an in-memory H2 database (schema `create-drop`).
+
+### API acceptance tests (how to use)
+
+The API-driven tests exercise the same flows shown above using real HTTP calls and JWTs.
+They are grouped by role and use `POST /auth/token` to fetch a token for each user type
+before calling the endpoints:
+
+- `AuthApiTest`: verifies token issuance for `ADMIN`, `ENDUSER`, and `DRONE`.
+- `EndUserApiTest`: submit, withdraw, list, and get orders; includes the “cannot withdraw after pickup” corner case.
+- `DroneApiTest`: reserve, pickup, complete, fail, mark broken (handoff), and a concurrent reservation test.
+- `AdminApiTest`: list orders, bulk fetch, update order, list drones, and set drone status.
+
+To run only the API tests:
+
+```bash
+gradle test --tests 'com.example.dronedelivery.api.*'
+```
+
+Note: if you are using the Gradle wrapper, make sure `gradlew` is executable and the wrapper JAR is present:
+
+```bash
+chmod +x gradlew
+./gradlew test
+```
+
+---
+
+## Design doc (current architecture)
+
+### Overview
+
+- **Architecture**: Spring Boot modular monolith with REST APIs.
+- **Auth**: HMAC JWT issued by `/auth/token`, then used as `Authorization: Bearer <token>`.
+- **Data**: H2 in-memory DB by default, JPA entities for drones, orders, jobs.
+- **Concurrency control**: Optimistic locking on jobs for reservation race handling.
+
+### Domain model (key entities)
+
+- **Drone**: status, last location, heartbeat, current job.
+- **DeliveryOrder**: created by enduser, status, current job, origin/destination.
+- **Job**: pickup/dropoff, status lifecycle, assigned drone, optional excluded drone for handoff.
+
+### Core flows
+
+- **Submit order** → creates order + OPEN job.
+- **Reserve job** → sets job RESERVED and assigns drone.
+- **Pickup** → job IN_PROGRESS, order IN_DELIVERY.
+- **Complete/Fail** → job terminal, order DELIVERED/FAILED.
+- **Broken drone** → fail job + create handoff job at drone’s last location (excluded drone enforced).
+
+---
+
+## Future plans / TODOs
+
+### Near-term improvements
+
+- Add contract tests for error handling (403/409/400) across all endpoints.
+- Add metrics for job reservation races and handoff frequency.
+- Expand seed data to include bulk admin scenarios and multiple handoff chains.
+
+### Scaling plan: move to microservices + async architecture
+
+As usage grows (large fleets and high order volume), the monolith can be split into services and
+made asynchronous to reduce coupling and improve throughput:
+
+**Target services**
+
+- **Auth Service** (JWT issuance, token introspection)
+- **Order Service** (order lifecycle, progress, admin changes)
+- **Drone Service** (heartbeat, location, status, assignment)
+- **Job Service** (reservation/pickup/complete/fail and handoff logic)
+- **Notification Service** (events → push/alerts to clients)
+
+**New technologies to introduce**
+
+- **gRPC** for internal service-to-service communication (lower latency, typed contracts).
+- **Kafka** (or **NATS**) for event streaming: `JobReserved`, `JobStarted`, `JobCompleted`, `DroneBroken`, etc.
+- **Outbox pattern** for reliable event publishing.
+- **Redis** for caching hot reads (open jobs, live drone locations).
+- **PostgreSQL** (or CockroachDB) for horizontal scale and stronger consistency guarantees.
+- **Observability stack**: OpenTelemetry + Prometheus/Grafana for tracing and metrics.
+
+**Async flow examples**
+
+- Reservation produces `JobReserved` → Order Service updates status asynchronously.
+- Drone heartbeat emits `DroneLocationUpdated` → consumers update ETA/progress views.
+- Broken drone emits `DroneBroken` → Job Service creates handoff + Notification Service alerts.

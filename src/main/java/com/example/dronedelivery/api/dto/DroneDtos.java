@@ -24,10 +24,17 @@ public class DroneDtos {
             Coordinates location
     ) {}
 
+    public enum NextAction {
+        RESERVE_JOB,
+        PICKUP,
+        DELIVER_OR_FAIL,
+        WAIT
+    }
+
     public record HeartbeatResponse(
             DroneResponse drone,
             Assignment assignment,
-            String nextAction
+            NextAction nextAction
     ) {}
 
     public record Assignment(
@@ -39,6 +46,23 @@ public class DroneDtos {
             UUID orderId,
             OrderStatus orderStatus
     ) {}
+
+    public record JobResponse(
+            UUID id,
+            UUID orderId,
+            JobType type,
+            JobStatus status,
+            Coordinates pickup,
+            Coordinates dropoff,
+            UUID assignedDroneId,
+            UUID excludedDroneId,
+            Instant reservedAt,
+            Instant startedAt,
+            Instant completedAt,
+            Instant failedAt,
+            Instant createdAt
+    ) {
+    }
 
     public record ReserveJobResponse(
             UUID jobId,

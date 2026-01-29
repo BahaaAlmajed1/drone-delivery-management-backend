@@ -1,7 +1,6 @@
 package com.example.dronedelivery.service;
 
 import com.example.dronedelivery.api.dto.DroneDtos;
-import com.example.dronedelivery.api.dto.JobDtos;
 import com.example.dronedelivery.api.dto.OrderDtos;
 import com.example.dronedelivery.api.dto.common.Coordinates;
 import com.example.dronedelivery.domain.DeliveryOrder;
@@ -33,8 +32,8 @@ public final class ResponseMapper {
         );
     }
 
-    public static JobDtos.JobResponse toDto(Job j) {
-        return new JobDtos.JobResponse(
+    public static DroneDtos.JobResponse toDto(Job j) {
+        return new DroneDtos.JobResponse(
                 j.getId(),
                 j.getOrderId(),
                 j.getType(),
