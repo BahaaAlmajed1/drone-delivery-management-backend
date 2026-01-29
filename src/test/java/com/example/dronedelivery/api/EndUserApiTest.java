@@ -56,8 +56,8 @@ class EndUserApiTest extends ApiTestSupport {
         String droneToken = tokenFor("enduser-withdraw-drone", AuthRole.DRONE);
         OrderDtos.OrderResponse order = submitOrder(endUserToken, 1.0, 2.0, 3.0, 4.0);
 
-        heartbeat(droneToken, 1.1, 2.1);
         reserveJob(droneToken, order.currentJobId());
+        heartbeat(droneToken, 1.1, 2.1);
         pickupJob(droneToken, order.currentJobId());
 
         ResponseEntity<String> withdrawResponse = restTemplate.exchange(

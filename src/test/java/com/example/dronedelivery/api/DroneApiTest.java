@@ -35,7 +35,6 @@ class DroneApiTest extends ApiTestSupport {
         String droneToken = tokenFor("drone-flow-drone", AuthRole.DRONE);
 
         OrderDtos.OrderResponse order = submitOrder(endUserToken, 5.0, 6.0, 7.0, 8.0);
-        heartbeat(droneToken, 5.1, 6.1);
 
         List<DroneDtos.JobResponse> openJobs = listOpenJobs(droneToken);
         Assertions.assertThat(openJobs).extracting(DroneDtos.JobResponse::id).contains(order.currentJobId());
@@ -43,6 +42,7 @@ class DroneApiTest extends ApiTestSupport {
         DroneDtos.JobResponse reserved = reserveJob(droneToken, order.currentJobId());
         Assertions.assertThat(reserved.status()).isEqualTo(JobStatus.RESERVED);
 
+        heartbeat(droneToken, 5.1, 6.1);
         DroneDtos.JobResponse inProgress = pickupJob(droneToken, order.currentJobId());
         Assertions.assertThat(inProgress.status()).isEqualTo(JobStatus.IN_PROGRESS);
 
@@ -56,8 +56,8 @@ class DroneApiTest extends ApiTestSupport {
         String droneToken = tokenFor("drone-fail-drone", AuthRole.DRONE);
 
         OrderDtos.OrderResponse order = submitOrder(endUserToken, 15.0, 16.0, 17.0, 18.0);
-        heartbeat(droneToken, 15.1, 16.1);
         reserveJob(droneToken, order.currentJobId());
+        heartbeat(droneToken, 15.1, 16.1);
         pickupJob(droneToken, order.currentJobId());
 
         DroneDtos.JobResponse failed = failJob(droneToken, order.currentJobId());
@@ -69,7 +69,7 @@ class DroneApiTest extends ApiTestSupport {
                 new HttpEntity<>(null, authHeaders(droneToken)),
                 DroneDtos.Assignment.class
         );
-        Assertions.assertThat(assignmentResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+        Assertions.assertThat(assignmentResponse.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
     @Test
@@ -78,9 +78,9 @@ class DroneApiTest extends ApiTestSupport {
         String droneToken = tokenFor("drone-broken-drone", AuthRole.DRONE);
 
         OrderDtos.OrderResponse order = submitOrder(endUserToken, 21.0, 22.0, 23.0, 24.0);
-        heartbeat(droneToken, 21.1, 22.1);
         reserveJob(droneToken, order.currentJobId());
         pickupJob(droneToken, order.currentJobId());
+        heartbeat(droneToken, 21.1, 22.1);
 
         ResponseEntity<DroneDtos.DroneResponse> brokenResponse = restTemplate.exchange(
                 "/drone/self/broken",

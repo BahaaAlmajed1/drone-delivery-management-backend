@@ -28,9 +28,7 @@ public class DroneController {
     }
 
     private UUID droneId() {
-        UUID id = AuthContext.actorIdOrNull();
-        if (id == null) throw ApiException.forbidden("Drone token missing actorId.");
-        return id;
+        return AuthContext.actorId();
     }
 
     @PostMapping("/self/heartbeat")
@@ -39,30 +37,25 @@ public class DroneController {
         var d = droneService.heartbeat(droneId, req.location().lat(), req.location().lng());
 
         Job job = droneService.getCurrentJobForDrone(droneId);
-        DroneDtos.Assignment assignment = null;
+        var order = orderRepository.findById(job.getOrderId())
+                .orElseThrow(() -> ApiException.notFound("Order not found for job: " + job.getOrderId()));
+        DroneDtos.Assignment assignment = new DroneDtos.Assignment(
+                job.getId(),
+                job.getStatus(),
+                job.getType(),
+                ResponseMapper.coordinates(job.getPickupLat(), job.getPickupLng()),
+                ResponseMapper.coordinates(job.getDropoffLat(), job.getDropoffLng()),
+                job.getOrderId(),
+                order.getStatus()
+        );
 
-        if (job != null) {
-            var order = orderRepository.findById(job.getOrderId()).orElse(null);
-            assignment = new DroneDtos.Assignment(
-                    job.getId(),
-                    job.getStatus(),
-                    job.getType(),
-                    ResponseMapper.coordinates(job.getPickupLat(), job.getPickupLng()),
-                    ResponseMapper.coordinates(job.getDropoffLat(), job.getDropoffLng()),
-                    job.getOrderId(),
-                    order == null ? null : order.getStatus()
-            );
-        }
-
-        DroneDtos.NextAction nextAction = DroneDtos.NextAction.RESERVE_JOB;
-        if (job != null) {
-            if (job.getStatus() == JobStatus.RESERVED) {
-                nextAction = DroneDtos.NextAction.PICKUP;
-            } else if (job.getStatus() == JobStatus.IN_PROGRESS) {
-                nextAction = DroneDtos.NextAction.DELIVER_OR_FAIL;
-            } else {
-                nextAction = DroneDtos.NextAction.WAIT;
-            }
+        DroneDtos.NextAction nextAction;
+        if (job.getStatus() == JobStatus.RESERVED) {
+            nextAction = DroneDtos.NextAction.PICKUP;
+        } else if (job.getStatus() == JobStatus.IN_PROGRESS) {
+            nextAction = DroneDtos.NextAction.DELIVER_OR_FAIL;
+        } else {
+            nextAction = DroneDtos.NextAction.WAIT;
         }
 
         return new DroneDtos.HeartbeatResponse(ResponseMapper.toDto(d), assignment, nextAction);
@@ -84,9 +77,9 @@ public class DroneController {
     public DroneDtos.Assignment currentAssignment() {
         UUID droneId = droneId();
         Job job = droneService.getCurrentJobForDrone(droneId);
-        if (job == null) return null;
 
-        var order = orderRepository.findById(job.getOrderId()).orElse(null);
+        var order = orderRepository.findById(job.getOrderId())
+                .orElseThrow(() -> ApiException.notFound("Order not found for job: " + job.getOrderId()));
         return new DroneDtos.Assignment(
                 job.getId(),
                 job.getStatus(),
@@ -94,7 +87,7 @@ public class DroneController {
                 ResponseMapper.coordinates(job.getPickupLat(), job.getPickupLng()),
                 ResponseMapper.coordinates(job.getDropoffLat(), job.getDropoffLng()),
                 job.getOrderId(),
-                order == null ? null : order.getStatus()
+                order.getStatus()
         );
     }
 }

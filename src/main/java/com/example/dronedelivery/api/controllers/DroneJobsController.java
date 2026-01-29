@@ -5,7 +5,6 @@ import com.example.dronedelivery.domain.Job;
 import com.example.dronedelivery.domain.JobStatus;
 import com.example.dronedelivery.repo.JobRepository;
 import com.example.dronedelivery.security.AuthContext;
-import com.example.dronedelivery.service.ApiException;
 import com.example.dronedelivery.service.DroneService;
 import com.example.dronedelivery.service.ResponseMapper;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -28,9 +27,7 @@ public class DroneJobsController {
     }
 
     private UUID droneId() {
-        UUID id = AuthContext.actorIdOrNull();
-        if (id == null) throw ApiException.forbidden("Drone token missing actorId.");
-        return id;
+        return AuthContext.actorId();
     }
 
     @GetMapping("/open")

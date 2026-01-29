@@ -24,7 +24,7 @@ public class EndUserOrdersController {
 
     @PostMapping
     public OrderDtos.OrderResponse submit(@Valid @RequestBody OrderDtos.SubmitOrderRequest req) {
-        UUID endUserId = AuthContext.actorIdOrNull();
+        UUID endUserId = AuthContext.actorId();
         var order = endUserService.submitOrder(
                 endUserId,
                 req.origin().lat(), req.origin().lng(),
@@ -35,14 +35,14 @@ public class EndUserOrdersController {
 
     @PostMapping("/{orderId}/withdraw")
     public OrderDtos.OrderResponse withdraw(@PathVariable UUID orderId) {
-        UUID endUserId = AuthContext.actorIdOrNull();
+        UUID endUserId = AuthContext.actorId();
         var order = endUserService.withdrawOrder(endUserId, orderId);
         return ResponseMapper.toDto(order, endUserService.computeProgress(order));
     }
 
     @GetMapping
     public List<OrderDtos.OrderResponse> listMine() {
-        UUID endUserId = AuthContext.actorIdOrNull();
+        UUID endUserId = AuthContext.actorId();
         return endUserService.listOrdersForEndUser(endUserId)
                 .stream()
                 .map(o -> ResponseMapper.toDto(o, endUserService.computeProgress(o)))
@@ -51,7 +51,7 @@ public class EndUserOrdersController {
 
     @GetMapping("/{orderId}")
     public OrderDtos.OrderResponse getMine(@PathVariable UUID orderId) {
-        UUID endUserId = AuthContext.actorIdOrNull();
+        UUID endUserId = AuthContext.actorId();
         var order = endUserService.getOrderForEndUser(endUserId, orderId);
         return ResponseMapper.toDto(order, endUserService.computeProgress(order));
     }

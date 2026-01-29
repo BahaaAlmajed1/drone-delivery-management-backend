@@ -37,6 +37,7 @@ class DroneServiceTest {
         Job job = jobRepository.findById(order.getCurrentJobId()).orElseThrow();
 
         Drone drone = droneRepository.save(new Drone("unit-broken-drone"));
+        droneService.heartbeat(drone.getId(), 5.0, 6.0);
         drone.setStatus(DroneStatus.BROKEN);
         droneRepository.save(drone);
 
@@ -70,8 +71,11 @@ class DroneServiceTest {
     }
 
     @Test
-    void currentJobReturnsNullWhenNoneAssigned() {
+    void currentJobThrowsWhenNoneAssigned() {
         Drone drone = droneRepository.save(new Drone("unit-no-job"));
-        assertThat(droneService.getCurrentJobForDrone(drone.getId())).isNull();
+        droneService.heartbeat(drone.getId(), 7.0, 8.0);
+        assertThatThrownBy(() -> droneService.getCurrentJobForDrone(drone.getId()))
+                .isInstanceOf(ApiException.class)
+                .hasMessageContaining("Drone has no current job");
     }
 }

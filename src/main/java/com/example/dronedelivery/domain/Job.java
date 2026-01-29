@@ -39,8 +39,7 @@ public class Job {
     private UUID assignedDroneId;
 
     /**
-     * For handoff jobs, ensure the initiating broken drone can never reserve it
-     * (satisfies: "picked up by a different drone, even if it gets marked as fixed").
+     * For handoff jobs, ensure the original drone can never reserve it even if its fixed later
      */
     private UUID excludedDroneId;
 

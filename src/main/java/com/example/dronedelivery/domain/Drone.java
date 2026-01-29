@@ -21,8 +21,8 @@ public class Drone {
     @Enumerated(EnumType.STRING)
     private DroneStatus status = DroneStatus.ACTIVE;
 
-    private Double lastLat;
-    private Double lastLng;
+    private Double lastLat = 0.0;
+    private Double lastLng = 0.0;
 
     private Instant lastHeartbeatAt;
 
