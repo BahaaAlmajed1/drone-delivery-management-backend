@@ -3,6 +3,7 @@ package com.example.dronedelivery.api.controllers;
 import com.example.dronedelivery.api.dto.DroneDtos;
 import com.example.dronedelivery.api.dto.OrderDtos;
 import com.example.dronedelivery.domain.DroneStatus;
+import com.example.dronedelivery.repo.JobRepository;
 import com.example.dronedelivery.repo.OrderRepository;
 import com.example.dronedelivery.service.AdminService;
 import com.example.dronedelivery.service.ApiException;
@@ -21,10 +22,12 @@ public class AdminController {
 
     private final AdminService adminService;
     private final OrderRepository orderRepository;
+    private final JobRepository jobRepository;
 
-    public AdminController(AdminService adminService, OrderRepository orderRepository) {
+    public AdminController(AdminService adminService, OrderRepository orderRepository, JobRepository jobRepository) {
         this.adminService = adminService;
         this.orderRepository = orderRepository;
+        this.jobRepository = jobRepository;
     }
 
     @GetMapping("/orders")
@@ -70,5 +73,13 @@ public class AdminController {
     public DroneDtos.DroneResponse setDroneStatus(@PathVariable UUID droneId, @RequestBody SetDroneStatusRequest req) {
         if (req == null || req.status() == null) throw ApiException.badRequest("status is required.");
         return ResponseMapper.toDto(adminService.adminSetDroneStatus(droneId, req.status()));
+    }
+
+    @GetMapping("/jobs")
+    public List<DroneDtos.JobResponse> listAllJobs() {
+        return jobRepository.findAll()
+                .stream()
+                .map(ResponseMapper::toDto)
+                .toList();
     }
 }

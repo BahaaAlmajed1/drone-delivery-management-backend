@@ -41,6 +41,13 @@ set DEFAULT_JVM_OPTS="-Xmx64m" "-Xms64m"
 @rem Find java.exe
 if defined JAVA_HOME goto findJavaFromJavaHome
 
+if exist "%APP_HOME%\.java-home" (
+  for /f "usebackq delims=" %%i in ("%APP_HOME%\.java-home") do (
+    set JAVA_HOME=%%i
+    goto findJavaFromJavaHome
+  )
+)
+
 set JAVA_EXE=java.exe
 %JAVA_EXE% -version >NUL 2>&1
 if %ERRORLEVEL% equ 0 goto execute

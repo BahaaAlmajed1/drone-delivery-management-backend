@@ -3,12 +3,14 @@ package com.example.dronedelivery.domain;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import java.time.Instant;
 import java.util.UUID;
 
 @Entity
 @Data
+@Slf4j
 @NoArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class Drone {
 
@@ -30,5 +32,10 @@ public class Drone {
 
     public Drone(String name) {
         this.name = name;
+    }
+
+    public void setLastHeartbeatAt(Instant lastHeartbeatAt) {
+        this.lastHeartbeatAt = lastHeartbeatAt;
+        log.debug("Received heartbeat for droneId {}, Heartbeat TS: {}", id, lastHeartbeatAt);
     }
 }
