@@ -34,6 +34,7 @@ app:
     ttl: ${APP_JWT_TTL:PT8H}
   scheduler:
     assignment-interval-seconds: ${APP_SCHEDULER_ASSIGNMENT_INTERVAL_SECONDS:10}
+    heartbeat-interval-seconds: ${APP_SCHEDULER_HEARTBEAT_INTERVAL_SECONDS:60}
     heartbeat-timeout-minutes: ${APP_SCHEDULER_HEARTBEAT_TIMEOUT_MINUTES:5}
 
 management:

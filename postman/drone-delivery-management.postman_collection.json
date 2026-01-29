@@ -1,8 +1,9 @@
 {
   "info": {
-    "_postman_id": "6e1df472-c0b0-4c0d-96ad-7d5b9bda28f0",
+    "_postman_id": "7fd031f9-8c7f-4e7a-94df-38ba7532d7df",
     "name": "Drone Delivery Management API",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "14514002"
   },
   "item": [
     {
@@ -17,7 +18,8 @@
                 "exec": [
                   "const json = pm.response.json();",
                   "pm.collectionVariables.set(\"adminToken\", json.accessToken);"
-                ]
+                ],
+                "type": "text/javascript"
               }
             }
           ],
@@ -34,9 +36,17 @@
               "raw": "{\n  \"name\": \"{{adminName}}\",\n  \"userType\": \"ADMIN\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/auth/token"
+              "raw": "{{baseUrl}}/auth/token",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "token"
+              ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Create Enduser Token",
@@ -47,7 +57,8 @@
                 "exec": [
                   "const json = pm.response.json();",
                   "pm.collectionVariables.set(\"enduserToken\", json.accessToken);"
-                ]
+                ],
+                "type": "text/javascript"
               }
             }
           ],
@@ -64,9 +75,17 @@
               "raw": "{\n  \"name\": \"{{enduserName}}\",\n  \"userType\": \"ENDUSER\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/auth/token"
+              "raw": "{{baseUrl}}/auth/token",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "token"
+              ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Create Drone Token",
@@ -77,7 +96,8 @@
                 "exec": [
                   "const json = pm.response.json();",
                   "pm.collectionVariables.set(\"droneToken\", json.accessToken);"
-                ]
+                ],
+                "type": "text/javascript"
               }
             }
           ],
@@ -94,9 +114,17 @@
               "raw": "{\n  \"name\": \"{{droneName}}\",\n  \"userType\": \"DRONE\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/auth/token"
+              "raw": "{{baseUrl}}/auth/token",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "token"
+              ]
             }
-          }
+          },
+          "response": []
         }
       ]
     },
@@ -113,7 +141,8 @@
                   "const json = pm.response.json();",
                   "pm.collectionVariables.set(\"orderId\", json.id);",
                   "pm.collectionVariables.set(\"jobId\", json.currentJobId);"
-                ]
+                ],
+                "type": "text/javascript"
               }
             }
           ],
@@ -140,9 +169,17 @@
               "raw": "{\n  \"origin\": {\n    \"lat\": 24.7136,\n    \"lng\": 46.6753\n  },\n  \"destination\": {\n    \"lat\": 24.7743,\n    \"lng\": 46.7386\n  }\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/enduser/orders"
+              "raw": "{{baseUrl}}/enduser/orders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "enduser",
+                "orders"
+              ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "List My Orders",
@@ -158,10 +195,19 @@
               ]
             },
             "method": "GET",
+            "header": [],
             "url": {
-              "raw": "{{baseUrl}}/enduser/orders"
+              "raw": "{{baseUrl}}/enduser/orders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "enduser",
+                "orders"
+              ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Get My Order",
@@ -177,10 +223,20 @@
               ]
             },
             "method": "GET",
+            "header": [],
             "url": {
-              "raw": "{{baseUrl}}/enduser/orders/{{orderId}}"
+              "raw": "{{baseUrl}}/enduser/orders/{{orderId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "enduser",
+                "orders",
+                "{{orderId}}"
+              ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Withdraw Order",
@@ -196,10 +252,21 @@
               ]
             },
             "method": "POST",
+            "header": [],
             "url": {
-              "raw": "{{baseUrl}}/enduser/orders/{{orderId}}/withdraw"
+              "raw": "{{baseUrl}}/enduser/orders/{{orderId}}/withdraw",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "enduser",
+                "orders",
+                "{{orderId}}",
+                "withdraw"
+              ]
             }
-          }
+          },
+          "response": []
         }
       ]
     },
@@ -231,9 +298,18 @@
               "raw": "{\n  \"location\": {\n    \"lat\": 24.72,\n    \"lng\": 46.68\n  }\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/drone/self/heartbeat"
+              "raw": "{{baseUrl}}/drone/self/heartbeat",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "drone",
+                "self",
+                "heartbeat"
+              ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Current Assignment",
@@ -249,10 +325,20 @@
               ]
             },
             "method": "GET",
+            "header": [],
             "url": {
-              "raw": "{{baseUrl}}/drone/self/job"
+              "raw": "{{baseUrl}}/drone/self/job",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "drone",
+                "self",
+                "job"
+              ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Mark Broken",
@@ -268,10 +354,20 @@
               ]
             },
             "method": "POST",
+            "header": [],
             "url": {
-              "raw": "{{baseUrl}}/drone/self/broken"
+              "raw": "{{baseUrl}}/drone/self/broken",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "drone",
+                "self",
+                "broken"
+              ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Mark Fixed",
@@ -287,10 +383,20 @@
               ]
             },
             "method": "POST",
+            "header": [],
             "url": {
-              "raw": "{{baseUrl}}/drone/self/fixed"
+              "raw": "{{baseUrl}}/drone/self/fixed",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "drone",
+                "self",
+                "fixed"
+              ]
             }
-          }
+          },
+          "response": []
         }
       ]
     },
@@ -308,7 +414,8 @@
                   "if (Array.isArray(json) && json.length > 0) {",
                   "  pm.collectionVariables.set(\"jobId\", json[0].id);",
                   "}"
-                ]
+                ],
+                "type": "text/javascript"
               }
             }
           ],
@@ -324,10 +431,20 @@
               ]
             },
             "method": "GET",
+            "header": [],
             "url": {
-              "raw": "{{baseUrl}}/drone/jobs/open"
+              "raw": "{{baseUrl}}/drone/jobs/open",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "drone",
+                "jobs",
+                "open"
+              ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Reserve Job",
@@ -343,10 +460,21 @@
               ]
             },
             "method": "POST",
+            "header": [],
             "url": {
-              "raw": "{{baseUrl}}/drone/jobs/{{jobId}}/reserve"
+              "raw": "{{baseUrl}}/drone/jobs/{{jobId}}/reserve",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "drone",
+                "jobs",
+                "{{jobId}}",
+                "reserve"
+              ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Pickup Job",
@@ -362,10 +490,21 @@
               ]
             },
             "method": "POST",
+            "header": [],
             "url": {
-              "raw": "{{baseUrl}}/drone/jobs/{{jobId}}/pickup"
+              "raw": "{{baseUrl}}/drone/jobs/{{jobId}}/pickup",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "drone",
+                "jobs",
+                "{{jobId}}",
+                "pickup"
+              ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Complete Job",
@@ -381,10 +520,21 @@
               ]
             },
             "method": "POST",
+            "header": [],
             "url": {
-              "raw": "{{baseUrl}}/drone/jobs/{{jobId}}/complete"
+              "raw": "{{baseUrl}}/drone/jobs/{{jobId}}/complete",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "drone",
+                "jobs",
+                "{{jobId}}",
+                "complete"
+              ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Fail Job",
@@ -400,10 +550,21 @@
               ]
             },
             "method": "POST",
+            "header": [],
             "url": {
-              "raw": "{{baseUrl}}/drone/jobs/{{jobId}}/fail"
+              "raw": "{{baseUrl}}/drone/jobs/{{jobId}}/fail",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "drone",
+                "jobs",
+                "{{jobId}}",
+                "fail"
+              ]
             }
-          }
+          },
+          "response": []
         }
       ]
     },
@@ -424,10 +585,62 @@
               ]
             },
             "method": "GET",
+            "header": [],
             "url": {
-              "raw": "{{baseUrl}}/admin/orders"
+              "raw": "{{baseUrl}}/admin/orders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "orders"
+              ]
             }
-          }
+          },
+          "response": []
+        },
+        {
+          "name": "List All Jobs",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (Array.isArray(json) && json.length > 0) {",
+                  "  pm.collectionVariables.set(\"jobId\", json[0].id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{droneToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/drone/jobs/open",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "drone",
+                "jobs",
+                "open"
+              ]
+            }
+          },
+          "response": []
         },
         {
           "name": "Bulk Orders",
@@ -454,9 +667,18 @@
               "raw": "{\n  \"orderIds\": [\"{{orderId}}\"]\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/admin/orders/bulk"
+              "raw": "{{baseUrl}}/admin/orders/bulk",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "orders",
+                "bulk"
+              ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Update Order",
@@ -483,9 +705,18 @@
               "raw": "{\n  \"origin\": {\n    \"lat\": 24.7,\n    \"lng\": 46.65\n  },\n  \"destination\": {\n    \"lat\": 24.8,\n    \"lng\": 46.75\n  }\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/admin/orders/{{orderId}}"
+              "raw": "{{baseUrl}}/admin/orders/{{orderId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "orders",
+                "{{orderId}}"
+              ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "List Drones",
@@ -498,7 +729,8 @@
                   "if (Array.isArray(json) && json.length > 0) {",
                   "  pm.collectionVariables.set(\"droneId\", json[0].id);",
                   "}"
-                ]
+                ],
+                "type": "text/javascript"
               }
             }
           ],
@@ -514,10 +746,19 @@
               ]
             },
             "method": "GET",
+            "header": [],
             "url": {
-              "raw": "{{baseUrl}}/admin/drones"
+              "raw": "{{baseUrl}}/admin/drones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "drones"
+              ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Set Drone Status",
@@ -544,9 +785,19 @@
               "raw": "{\n  \"status\": \"ACTIVE\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/admin/drones/{{droneId}}/status"
+              "raw": "{{baseUrl}}/admin/drones/{{droneId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "drones",
+                "{{droneId}}",
+                "status"
+              ]
             }
-          }
+          },
+          "response": []
         }
       ]
     }
