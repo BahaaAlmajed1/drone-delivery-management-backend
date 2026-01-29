@@ -13,7 +13,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.*;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
@@ -21,6 +24,7 @@ import java.util.concurrent.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class DroneApiTest extends ApiTestSupport {
 
     @LocalServerPort
@@ -130,26 +134,34 @@ class DroneApiTest extends ApiTestSupport {
             ready.countDown();
             start.await(3, TimeUnit.SECONDS);
             HttpHeaders headers = authHeaders(droneTokenA);
-            ResponseEntity<String> response = restTemplateA.exchange(
-                    "/drone/jobs/" + order.currentJobId() + "/reserve",
-                    HttpMethod.POST,
-                    new HttpEntity<>(null, headers),
-                    String.class
-            );
-            return response.getStatusCode().is2xxSuccessful();
+            try {
+                ResponseEntity<String> response = restTemplateA.exchange(
+                        "/drone/jobs/" + order.currentJobId() + "/reserve",
+                        HttpMethod.POST,
+                        new HttpEntity<>(null, headers),
+                        String.class
+                );
+                return response.getStatusCode().is2xxSuccessful();
+            } catch (HttpClientErrorException | HttpServerErrorException ex) {
+                return false;
+            }
         };
 
         Callable<Boolean> reserveB = () -> {
             ready.countDown();
             start.await(3, TimeUnit.SECONDS);
             HttpHeaders headers = authHeaders(droneTokenB);
-            ResponseEntity<String> response = restTemplateB.exchange(
-                    "/drone/jobs/" + order.currentJobId() + "/reserve",
-                    HttpMethod.POST,
-                    new HttpEntity<>(null, headers),
-                    String.class
-            );
-            return response.getStatusCode().is2xxSuccessful();
+            try {
+                ResponseEntity<String> response = restTemplateB.exchange(
+                        "/drone/jobs/" + order.currentJobId() + "/reserve",
+                        HttpMethod.POST,
+                        new HttpEntity<>(null, headers),
+                        String.class
+                );
+                return response.getStatusCode().is2xxSuccessful();
+            } catch (HttpClientErrorException | HttpServerErrorException ex) {
+                return false;
+            }
         };
 
         Future<Boolean> futureA = executor.submit(reserveA);

@@ -10,6 +10,9 @@ version = '1.0.0'
 java {
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    }
 }
 
 repositories {
@@ -41,4 +44,14 @@ dependencies {
 
 tasks.named('test') {
     useJUnitPlatform()
+    exclude 'com/example/dronedelivery/api/**'
+}
+
+
+tasks.register('integrationTest', Test) {
+    useJUnitPlatform()
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    include 'com/example/dronedelivery/api/**'
+    shouldRunAfter tasks.test
 }

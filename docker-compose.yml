@@ -1,8 +1,0 @@
-services:
-  api:
-    build: .
-    environment:
-      APP_JWT_SECRET: "change-me-change-me-change-me-change-me"
-      APP_JWT_TTL: "PT8H"
-    ports:
-      - "8080:8080"

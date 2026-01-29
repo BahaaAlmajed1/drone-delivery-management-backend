@@ -1,333 +1,85 @@
-# Drone Delivery Management Backend (Technical Assessment)
+# Drone Delivery Management Backend
 
-This project implements the assessment requirements as a **Spring Boot modular monolith** with:
-- REST API
-- Self-signed **HMAC JWT** auth issued by an allowlisted endpoint (`/auth/token`)
-- **In-memory database by default (H2)** so it runs with zero external dependencies
-- Swagger / OpenAPI docs
-- Dockerfile + docker-compose
-- A small test suite
+Spring Boot modular monolith for the drone delivery assessment. It exposes REST APIs, issues HMAC-signed JWTs, and runs
+against an in-memory H2 database by default.
 
-## Quick start (zero dependencies)
+Verify Java is available:
+```bash
+java -version
+```
+
+### Local Setup
+
+1. Ensure Java 17 is available and correct java path is set in your environment variables (PATH, JAVA_HOME).
+2. Start the app by running main method by using IDE (com.example.dronedelivery.DroneDeliveryApplication.main) or by
+   running:
 
 ```bash
-gradle bootRun
+./gradlew bootRun
 ```
 
-API: `http://localhost:8080`
-Swagger UI: `http://localhost:8080/swagger-ui/index.html`
+The API starts on `http://localhost:8080` and Swagger UI is at `http://localhost:8080/swagger-ui/index.html`.
 
-Optional (debug): H2 console at `http://localhost:8080/h2`
+## Auth process
 
----
+Authentication is intentionally simple for the assessment:
 
-## Run with Docker
+1. Call `POST /auth/token` with a name and role (`ADMIN`, `ENDUSER`, `DRONE`).
+2. Use the returned access token as `Authorization: Bearer <token>` for all other requests.
 
-```bash
-docker compose up --build
-```
+## Scheduler behavior
 
-API: `http://localhost:8080`  
-Swagger UI: `http://localhost:8080/swagger-ui/index.html`
+The assignment scheduler periodically matches **OPEN** jobs to the closest available drone based on the drone’s last
+heartbeat location. It ignores drones that are broken or already on a job. When a drone misses heartbeats for too long,
+it is automatically marked **BROKEN**; if it was mid-delivery, a handoff job is created so another drone can finish the
+delivery.
 
----
+## Configs you are likely to change
 
-## Auth (JWT)
+All configs live in `application.yml` (or can be overridden with environment variables).
 
-Assessment requirement: the JWT is handed out by an endpoint that takes a **name** and a **type of user** (admin, enduser, drone).  
-Then all other endpoints validate that JWT as `Authorization: Bearer <token>`.
-
-### Get tokens
-
-**Admin**
-```bash
-curl -s http://localhost:8080/auth/token \
-  -H 'Content-Type: application/json' \
-  -d '{"name":"alice-admin","userType":"ADMIN"}'
-```
-
-**Enduser**
-```bash
-curl -s http://localhost:8080/auth/token \
-  -H 'Content-Type: application/json' \
-  -d '{"name":"bob-enduser","userType":"ENDUSER"}'
-```
-
-**Drone**
-```bash
-curl -s http://localhost:8080/auth/token \
-  -H 'Content-Type: application/json' \
-  -d '{"name":"drone-01","userType":"DRONE"}'
-```
-
-The response is:
-```json
-{ "tokenType": "Bearer", "accessToken": "..." }
-```
-
----
-
-## Main flows
-
-### Enduser: submit an order
-
-```bash
-ENDUSER_TOKEN="...";
-
-curl -s http://localhost:8080/enduser/orders \
-  -H "Authorization: Bearer $ENDUSER_TOKEN" \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "origin": {"lat": 24.7136, "lng": 46.6753},
-    "destination": {"lat": 24.7743, "lng": 46.7386}
-  }'
-```
-
-This creates:
-- an `orders` row (`SUBMITTED`)
-- an initial `jobs` row (`OPEN`) with pickup=origin and dropoff=destination
-
-### Drone: heartbeat (location update + status update)
-
-Assessment requirement: drones update lat/lng and **get a status update as a heartbeat**.
-
-```bash
-DRONE_TOKEN="...";
-
-curl -s http://localhost:8080/drone/self/heartbeat \
-  -H "Authorization: Bearer $DRONE_TOKEN" \
-  -H 'Content-Type: application/json' \
-  -d '{"location":{"lat":24.7200,"lng":46.6800}}'
-```
-
-### Drone: list open jobs and reserve one
-
-```bash
-curl -s http://localhost:8080/drone/jobs/open \
-  -H "Authorization: Bearer $DRONE_TOKEN"
-```
-
-Reserve:
-```bash
-JOB_ID="...";
-
-curl -s http://localhost:8080/drone/jobs/$JOB_ID/reserve \
-  -H "Authorization: Bearer $DRONE_TOKEN" \
-  -X POST
-```
-
-Reservation is concurrency-safe via **optimistic locking** on the `jobs` table. If two drones race, one gets `409 Conflict`.
-
-### Automatic scheduler: assign closest drones
-
-The app also runs a background scheduler that periodically assigns **OPEN** jobs to the closest available drone
-based on the job’s pickup origin and the drone’s last heartbeat location (skipping broken drones or ones already
-on a job). The interval is configurable in `application.yml`:
-
-```yaml
-app:
-  scheduler:
-    assignment-interval-seconds: 10
-    heartbeat-timeout-minutes: 5
-```
-
-The heartbeat timeout also drives an availability check: drones that have not sent a heartbeat within the
-configured number of minutes are automatically marked as `BROKEN` (including the same handoff logic if
-they were mid-delivery).
-
-### Drone: pickup and complete (or fail)
-
-Pickup:
-```bash
-curl -s http://localhost:8080/drone/jobs/$JOB_ID/pickup \
-  -H "Authorization: Bearer $DRONE_TOKEN" \
-  -X POST
-```
-
-Complete:
-```bash
-curl -s http://localhost:8080/drone/jobs/$JOB_ID/complete \
-  -H "Authorization: Bearer $DRONE_TOKEN" \
-  -X POST
-```
-
-Fail:
-```bash
-curl -s http://localhost:8080/drone/jobs/$JOB_ID/fail \
-  -H "Authorization: Bearer $DRONE_TOKEN" \
-  -X POST
-```
-
-### Drone: mark broken (handoff rule)
-
-Assessment additional rule:
-> Any time a drone is broken it will stop and put up a job for its goods to be picked up by a different drone (even if it gets marked as fixed).
-
-If a drone marks itself broken while **holding the goods** (i.e., its current job is `IN_PROGRESS`), the service:
-1. fails the current job
-2. creates a new **handoff job** (`HANDOFF_PICKUP_AND_DELIVER`) with pickup = the broken drone’s **last heartbeat location**
-3. sets `excludedDroneId` on that handoff job so the same drone can never reserve it (even if later marked fixed)
-
-```bash
-curl -s http://localhost:8080/drone/self/broken \
-  -H "Authorization: Bearer $DRONE_TOKEN" \
-  -X POST
-```
-
-### Enduser: withdraw an order (only if not picked up)
-
-```bash
-ORDER_ID="...";
-
-curl -s http://localhost:8080/enduser/orders/$ORDER_ID/withdraw \
-  -H "Authorization: Bearer $ENDUSER_TOKEN" \
-  -X POST
-```
-
-Withdrawal is rejected if the current job is already `IN_PROGRESS` (interpreting “picked up” as the job started).
-
----
-
-## Admin endpoints
-
-List orders:
-```bash
-ADMIN_TOKEN="...";
-
-curl -s http://localhost:8080/admin/orders \
-  -H "Authorization: Bearer $ADMIN_TOKEN"
-```
-
-Bulk get orders:
-```bash
-curl -s http://localhost:8080/admin/orders/bulk \
-  -H "Authorization: Bearer $ADMIN_TOKEN" \
-  -H 'Content-Type: application/json' \
-  -d '{"orderIds":["...","..."]}'
-```
-
-Change origin/destination (guarded: only before pickup; origin not allowed during handoff):
-```bash
-curl -s http://localhost:8080/admin/orders/$ORDER_ID \
-  -H "Authorization: Bearer $ADMIN_TOKEN" \
-  -H 'Content-Type: application/json' \
-  -X PATCH \
-  -d '{"origin":{"lat":24.7000,"lng":46.6500},"destination":{"lat":24.8000,"lng":46.7500}}'
-```
-
-List drones:
-```bash
-curl -s http://localhost:8080/admin/drones \
-  -H "Authorization: Bearer $ADMIN_TOKEN"
-```
-
-Mark drone broken/fixed (broken triggers the same handoff logic if it was in progress):
-```bash
-DRONE_ID="...";
-
-curl -s http://localhost:8080/admin/drones/$DRONE_ID/status \
-  -H "Authorization: Bearer $ADMIN_TOKEN" \
-  -H 'Content-Type: application/json' \
-  -X POST \
-  -d '{"status":"BROKEN"}'
-```
-
----
-
-## Local dev (without Docker)
-
-By default, the app runs against an **in-memory H2** DB with `create-drop` schema generation.
-
-If you want to point to another JDBC database later, override `SPRING_DATASOURCE_URL` (and credentials) while keeping
-the same Spring Boot configuration.
-
----
+| Config key                                  | Default              | Why you might change it                                |
+|---------------------------------------------|----------------------|--------------------------------------------------------|
+| `app.scheduler.assignment-interval-seconds` | `10`                 | Adjust how frequently the scheduler assigns open jobs. |
+| `app.scheduler.heartbeat-timeout-minutes`   | `5`                  | Tune how quickly inactive drones are marked as broken. |
+| `spring.datasource.url`                     | `jdbc:h2:mem:testdb` | Point to a real database instead of H2.                |
+| `spring.jpa.hibernate.ddl-auto`             | `create-drop`        | Change schema management for persistent environments.  |
 
 ## Run tests
 
-```bash
-gradle test
-```
+### Unit tests (src/test/java/com/example/dronedelivery/service) (Please Run with Application OFF)
 
-Tests run against an in-memory H2 database (schema `create-drop`).
-
-### API acceptance tests (how to use)
-
-The API-driven tests exercise the same flows shown above using real HTTP calls and JWTs.
-They are grouped by role and use `POST /auth/token` to fetch a token for each user type
-before calling the endpoints:
-
-- `AuthApiTest`: verifies token issuance for `ADMIN`, `ENDUSER`, and `DRONE`.
-- `EndUserApiTest`: submit, withdraw, list, and get orders; includes the “cannot withdraw after pickup” corner case.
-- `DroneApiTest`: reserve, pickup, complete, fail, mark broken (handoff), and a concurrent reservation test.
-- `AdminApiTest`: list orders, bulk fetch, update order, list drones, and set drone status.
-
-To run only the API tests:
+These tests run with the Spring test context and you must **not** app running:
 
 ```bash
-gradle test --tests 'com.example.dronedelivery.api.*'
+./gradlew test --tests 'com.example.dronedelivery.service.*'
 ```
 
-Note: if you are using the Gradle wrapper, make sure `gradlew` is executable and the wrapper JAR is present:
+### Integration tests (API package, Please run with app RUNNING)
+
+1. Start the app in one terminal (or by running using IDE):
 
 ```bash
-chmod +x gradlew
-./gradlew test
+./gradlew bootRun
 ```
 
----
+2. Run the API package (src/test/java/com/example/dronedelivery/api) tests from another terminal (or by running using
+   IDE):
 
-## Design doc (current architecture)
+```bash
+./gradlew integrationTest --tests 'com.example.dronedelivery.api.*'
+```
 
-### Overview
+## Current design
 
-- **Architecture**: Spring Boot modular monolith with REST APIs.
-- **Auth**: HMAC JWT issued by `/auth/token`, then used as `Authorization: Bearer <token>`.
-- **Data**: H2 in-memory DB by default, JPA entities for drones, orders, jobs.
-- **Concurrency control**: Optimistic locking on jobs for reservation race handling.
+- It is a single Spring Boot service for now so everything is easy to trace and debug.
+- Data stays in a single database (H2 by default) with JPA entities for drones, orders, and jobs.
+- Job reservation uses optimistic locking so concurrent drones don’t double-reserve the same job.
+- The scheduler automates “closest drone” assignment and the heartbeat timeout protects against silent failures.
 
-### Domain model (key entities)
+## TODOs / Future improvements
 
-- **Drone**: status, last location, heartbeat, current job.
-- **DeliveryOrder**: created by enduser, status, current job, origin/destination.
-- **Job**: pickup/dropoff, status lifecycle, assigned drone, optional excluded drone for handoff.
-
-### Core flows
-
-- **Submit order** → creates order + OPEN job.
-- **Reserve job** → sets job RESERVED and assigns drone.
-- **Pickup** → job IN_PROGRESS, order IN_DELIVERY.
-- **Complete/Fail** → job terminal, order DELIVERED/FAILED.
-- **Broken drone** → fail job + create handoff job at drone’s last location (excluded drone enforced).
-
----
-
-## Future plans / TODOs
-
-### Scaling plan: move to microservices + async architecture
-
-As usage grows (large fleets and high order volume), the monolith can be split into services and
-made asynchronous to reduce coupling and improve throughput:
-
-**Target services**
-
-- **Auth Service** (JWT issuance, token introspection)
-- **Order Service** (order lifecycle, progress, admin changes)
-- **Drone Service** (heartbeat, location, status, assignment)
-- **Job Service** (reservation/pickup/complete/fail and handoff logic)
-- **Notification Service** (events → push/alerts to clients)
-
-**New technologies to introduce**
-
-- **gRPC** for internal service-to-service communication
-- **Kafka** for event streaming: `JobReserved`, `JobStarted`, `JobCompleted`, `DroneBroken`, etc.
-- **Outbox pattern** for reliable event publishing.
-- **Redis** for caching hot reads (open jobs, live drone locations).
-- **PostgreSQL** (or CockroachDB) for horizontal scale and stronger consistency guarantees.
-- **Observability stack**: Prometheus/Grafana for tracing and metrics.
-
-**Async flow examples**
-
-- Reservation produces `JobReserved` → Order Service updates status asynchronously.
-- Drone heartbeat emits `DroneLocationUpdated` → consumers update ETA/progress views.
-- Broken drone emits `DroneBroken` → Job Service creates handoff + Notification Service alerts.
+- Split into smaller services once traffic grows (auth, orders, drones, jobs).
+- Add an event stream for state changes using KAFKA (job reserved, job started, drone broken).
+- Replace H2 with Postgres/CockroachDb or any ACID Scalable DB and add read caching(Redis) for hot endpoints.
+- Introduce observability (metrics + tracing) via Prometheus/Grafana before scaling.

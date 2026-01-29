@@ -4,6 +4,8 @@ import com.example.dronedelivery.domain.*;
 import com.example.dronedelivery.repo.DroneRepository;
 import com.example.dronedelivery.repo.EndUserRepository;
 import com.example.dronedelivery.repo.JobRepository;
+import com.example.dronedelivery.repo.OrderRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -30,6 +32,16 @@ class JobAssignmentSchedulerTest {
     EndUserRepository endUserRepository;
     @Autowired
     JobRepository jobRepository;
+    @Autowired
+    OrderRepository orderRepository;
+
+    @BeforeEach
+    void resetData() {
+        jobRepository.deleteAll();
+        orderRepository.deleteAll();
+        droneRepository.deleteAll();
+        endUserRepository.deleteAll();
+    }
 
     @Test
     void assignsClosestDroneToOpenJob() {

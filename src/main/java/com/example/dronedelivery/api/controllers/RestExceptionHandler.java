@@ -2,6 +2,7 @@ package com.example.dronedelivery.api.controllers;
 
 import com.example.dronedelivery.service.ApiException;
 import jakarta.validation.ConstraintViolationException;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -44,6 +45,16 @@ public class RestExceptionHandler {
                 "status", 400,
                 "error", "Bad Request",
                 "message", e.getMessage()
+        ));
+    }
+
+    @ExceptionHandler(OptimisticLockingFailureException.class)
+    public ResponseEntity<?> handleOptimisticLock(OptimisticLockingFailureException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                "timestamp", Instant.now().toString(),
+                "status", 409,
+                "error", "Conflict",
+                "message", "Reservation conflict. Another drone reserved this job first."
         ));
     }
 
